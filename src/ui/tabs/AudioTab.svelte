@@ -82,35 +82,35 @@
 </script>
 
 {#each sortedKeys as key (key)}
-    <div class="mb-4 p-2 bg-zinc-800 rounded-lg flex items-center gap-4">
-        <div class="w-24 h-24 bg-black rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
+    <div class="im-mb-4 im-p-2 im-bg-zinc-800 im-rounded-lg im-flex im-items-center im-gap-4">
+        <div class="im-w-24 im-h-24 im-bg-black im-rounded im-overflow-hidden im-flex-shrink-0 im-flex im-items-center im-justify-center">
             {#if key}
                 {#await InlayManager.getInlayData(key) then inlayData}
                     {#if inlayData}
                         {#if inlayData.type === InlayType.Audio}
                             {#await UrlManager.getDataURL(key, inlayData) then dataURL}
-                                <audio src={dataURL} class="w-full h-full" controls>
+                                <audio src={dataURL} class="im-w-full im-h-full" controls>
                                     해당 브라우저는 오디오를 지원하지 않습니다.
                                 </audio>
                             {:catch error}
-                                <div class="w-full h-full flex items-center justify-center text-red-500">Error</div>
+                                <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-red-500">Error</div>
                             {/await}
                         {:else}
-                            <div class="w-full h-full flex items-center justify-center text-red-500">Not an audio</div>
+                            <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-red-500">Not an audio</div>
                         {/if}
                     {:else}
-                        <div class="w-full h-full flex items-center justify-center text-gray-500">No Data</div>
+                        <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-gray-500">No Data</div>
                     {/if}
                 {:catch error}
-                    <div class="w-full h-full flex items-center justify-center text-red-500">Error</div>
+                    <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-red-500">Error</div>
                 {/await}
             {:else}
-                <div class="w-full h-full flex items-center justify-center text-gray-500">No Key</div>
+                <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-gray-500">No Key</div>
             {/if}
         </div>
-        <div class="flex-1">
-            <h3 class="text-white font-medium">{key}</h3>
-            <p class="text-zinc-400 text-sm">
+        <div class="im-flex-1">
+            <h3 class="im-text-white im-font-medium">{key}</h3>
+            <p class="im-text-zinc-400 im-text-sm">
                 {#if timeMap.has(key)}
                     생성 시간: {timeMap.get(key)?.toLocaleString('ko-KR')}
                 {:else}
@@ -120,11 +120,11 @@
         </div>
     </div>
 {:else}
-    <div class="flex flex-col items-center justify-center h-64 text-zinc-500">
-        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="im-flex im-flex-col im-items-center im-justify-center im-h-64 im-text-zinc-500">
+        <svg class="im-w-16 im-h-16 im-mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 0-1.105 1.343-2 3-2s3 .895 3 2m-6-4l6 6m0 0l-6-6" />
         </svg>
-        <p class="text-lg font-medium">오디오가 없습니다</p>
-        <p class="text-sm mt-2">RisuAI에서 오디오 인레이를 추가해주세요</p>
+        <p class="im-text-lg im-font-medium">오디오가 없습니다</p>
+        <p class="im-text-sm im-mt-2">RisuAI에서 오디오 인레이를 추가해주세요</p>
     </div>
 {/each}

@@ -82,38 +82,38 @@
 </script>
 
 {#each sortedKeys as key (key)}
-    <div class="mb-4 p-2 bg-zinc-800 rounded-lg flex items-center gap-4 hover:bg-zinc-700 transition-colors">
-        <div class="w-24 h-24 bg-black rounded overflow-hidden flex-shrink-0">
+    <div class="im-mb-4 im-p-2 im-bg-zinc-800 im-rounded-lg im-flex im-items-center im-gap-4 hover:im-bg-zinc-700 im-transition-colors">
+        <div class="im-w-24 im-h-24 im-bg-black im-rounded im-overflow-hidden im-flex-shrink-0">
             {#if key}
                 {#await InlayManager.getInlayData(key) then inlayData}
                     {#if inlayData}
                         {#if inlayData.type === InlayType.Image}
                             {#await UrlManager.getDataURL(key, inlayData) then dataURL}
                                 <!-- svelte-ignore a11y-img-redundant-alt -->
-                                <img src={dataURL} alt="Inlay Image" class="w-full h-full object-cover" />
+                                <img src={dataURL} alt="Inlay Image" class="im-w-full im-h-full im-object-cover" />
                             {:catch error}
-                                <div class="w-full h-full flex items-center justify-center text-red-500">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-red-500">
+                                    <svg class="im-w-8 im-h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                     </svg>
                                 </div>
                             {/await}
                         {:else}
-                            <div class="w-full h-full flex items-center justify-center text-red-500">Not an image</div>
+                            <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-red-500">Not an image</div>
                         {/if}
                     {:else}
-                        <div class="w-full h-full flex items-center justify-center text-gray-500">No Data</div>
+                        <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-gray-500">No Data</div>
                     {/if}
                 {:catch error}
-                    <div class="w-full h-full flex items-center justify-center text-red-500">Error</div>
+                    <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-red-500">Error</div>
                 {/await}
             {:else}
-                <div class="w-full h-full flex items-center justify-center text-gray-500">No Key</div>
+                <div class="im-w-full im-h-full im-flex im-items-center im-justify-center im-text-gray-500">No Key</div>
             {/if}
         </div>
-        <div class="flex-1 min-w-0">
-            <h3 class="text-white font-medium truncate">{key}</h3>
-            <p class="text-zinc-400 text-sm">
+        <div class="im-flex-1 im-min-w-0">
+            <h3 class="im-text-white im-font-medium im-truncate">{key}</h3>
+            <p class="im-text-zinc-400 im-text-sm">
                 {#if timeMap.has(key)}
                     생성 시간: {timeMap.get(key)?.toLocaleString('ko-KR')}
                 {:else}
@@ -122,7 +122,7 @@
             </p>
             {#await InlayManager.getInlayData(key) then inlayData}
                 {#if inlayData}
-                    <div class="flex items-center gap-4 text-xs text-zinc-500 mt-1">
+                    <div class="im-flex im-items-center im-gap-4 im-text-xs im-text-zinc-500 im-mt-1">
                         <span>크기: {inlayData.width} × {inlayData.height}</span>
                         <span>형식: {inlayData.ext}</span>
                     </div>
@@ -131,11 +131,11 @@
         </div>
     </div>
 {:else}
-    <div class="flex flex-col items-center justify-center h-64 text-zinc-500">
-        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="im-flex im-flex-col im-items-center im-justify-center im-h-64 im-text-zinc-500">
+        <svg class="im-w-16 im-h-16 im-mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <p class="text-lg font-medium">이미지가 없습니다</p>
-        <p class="text-sm mt-2">RisuAI에서 이미지 인레이를 추가해주세요</p>
+        <p class="im-text-lg im-font-medium">이미지가 없습니다</p>
+        <p class="im-text-sm im-mt-2">RisuAI에서 이미지 인레이를 추가해주세요</p>
     </div>
 {/each}

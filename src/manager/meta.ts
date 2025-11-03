@@ -67,12 +67,14 @@ export class TimeManager {
         return entry?.timestamp;
     }
 
-    static async setTime(key: string, timestamp: Date): Promise<void> {
+    static async setTime(key: string, timestamp: Date): Promise<boolean> {
         const entry = await db.time.get(key);
         if (!entry) {
             await db.time.put({ key, timestamp });
             this.eventSystem.emit(InlayEventType.TIME_UPDATED, { key, timestamp });
+            return true; // 새로운 키가 추가됨
         }
+        return false; // 이미 존재하는 키
     }
 
     static async bulkDelete(keys: string[]): Promise<void> {
