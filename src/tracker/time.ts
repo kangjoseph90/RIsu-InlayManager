@@ -1,5 +1,5 @@
 import { type EditFunction, ScriptMode, RisuAPI } from '../api';
-import { TimeManager } from '../manager/meta';
+import { TimeManager } from '../manager/time';
 
 export class TimeTracker {
     private inlayObserver: EditFunction = async (content: string) => {

@@ -1,4 +1,3 @@
-import type { InlayData } from "../types";
 import { InlayManager } from "./inlay";
 
 const urlCache = new Map<string, string>();
