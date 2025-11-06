@@ -127,7 +127,7 @@
                 const dataURL = await UrlManager.getDataURL(key);
                 const link = document.createElement('a');
                 link.href = dataURL;
-                link.download = `asset_${key}_${Date.now()}`;
+                link.download = `asset_${key}`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
