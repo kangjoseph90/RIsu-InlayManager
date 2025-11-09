@@ -27,6 +27,13 @@
     let visibleIndices = new Set<number>();
     let visibleKeys = new Set<string>();
     
+    // Touch scroll detection
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let hasMoved = false;
+    let longPressCompleted = false; // long press 완료 여부
+    const MOVE_THRESHOLD = 10; // 픽셀 - 이 이상 움직이면 스크롤로 간주
+    
     $: {
         visibleKeys.clear();
         for (const index of visibleIndices) {
@@ -39,11 +46,13 @@
     // Functions for selection mode
     function startLongPress(key: string) {
         longPressKey = key;
+        longPressCompleted = false;
         longPressTimer = window.setTimeout(() => {
             if (!selectionMode) {
                 selectionMode = true;
                 selectedAssets.add(key);
                 selectedAssets = selectedAssets;
+                longPressCompleted = true; // long press 완료 표시
             }
         }, LONG_PRESS_DURATION);
     }
@@ -54,10 +63,18 @@
             longPressTimer = null;
         }
         longPressKey = null;
+        longPressCompleted = false;
     }
     
     function handleAssetClick(key: string) {
-        cancelLongPress();
+        // 스크롤 중이었으면 클릭 무시
+        if (hasMoved) return;
+        
+        // long press가 완료되었으면 클릭으로 처리하지 않음
+        if (longPressCompleted) {
+            longPressCompleted = false;
+            return;
+        }
         
         if (selectionMode) {
             toggleAssetSelection(key);
@@ -70,6 +87,44 @@
     
     function closePopup() {
         showPopup = false;
+    }
+    
+    function handleTouchStart(key: string, e: TouchEvent) {
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        hasMoved = false;
+        startLongPress(key);
+    }
+    
+    function handleTouchMove(e: TouchEvent) {
+        const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+        const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+        
+        // 움직임이 threshold 넘으면 스크롤로 간주
+        if (deltaY > MOVE_THRESHOLD || deltaX > MOVE_THRESHOLD) {
+            hasMoved = true;
+            cancelLongPress();
+        }
+    }
+    
+    function handleTouchEnd() {
+        // long press가 완료되지 않았으면 타이머만 취소
+        if (!longPressCompleted) {
+            cancelLongPress();
+        }
+    }
+    
+    function handleMouseUp(key: string) {
+        // 데스크톱에서도 long press 중이 아니면 취소
+        if (!longPressCompleted) {
+            cancelLongPress();
+        }
+    }
+    
+    function handleKeyDown(key: string, e: KeyboardEvent) {
+        if (e.key === 'Enter') {
+            handleAssetClick(key);
+        }
     }
     
     function toggleAssetSelection(key: string) {
@@ -220,19 +275,20 @@
             data-asset-item
             data-key={key}
             class="group relative aspect-square bg-zinc-900 rounded-xl overflow-hidden
-                   transition-all duration-200 cursor-pointer
-                   {selectionMode ? 'hover:scale-95' : 'hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20'}
-                   {selectedAssets.has(key) ? 'ring-4 ring-blue-500 scale-95' : 'hover:ring-2 hover:ring-blue-400/50'}"
+                   transition-all duration-200 cursor-pointer touch-manipulation
+                   {selectionMode ? 'md:hover:scale-95' : 'md:hover:scale-105 md:hover:shadow-2xl md:hover:shadow-blue-500/20'}
+                   {selectedAssets.has(key) ? 'ring-4 ring-blue-500 scale-95' : 'md:hover:ring-2 md:hover:ring-blue-400/50'}"
             on:mousedown={() => startLongPress(key)}
-            on:mouseup={cancelLongPress}
+            on:mouseup={() => handleMouseUp(key)}
             on:mouseleave={cancelLongPress}
-            on:touchstart={() => startLongPress(key)}
-            on:touchend={cancelLongPress}
-            on:touchcancel={cancelLongPress}
+            on:touchstart={(e) => handleTouchStart(key, e)}
+            on:touchmove={handleTouchMove}
+            on:touchend={handleTouchEnd}
+            on:touchcancel={handleTouchEnd}
             on:click={() => handleAssetClick(key)}
             role="button"
             tabindex="0"
-            on:keydown={(e) => e.key === 'Enter' && handleAssetClick(key)}
+            on:keydown={(e) => handleKeyDown(key, e)}
         >
             <!-- Asset Viewer with Lazy Loading -->
             <AssetViewer
