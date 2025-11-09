@@ -3,9 +3,9 @@
     import { InlayType, type InlayData } from "../../types";
     import { TimeManager } from "../../manager/time";
     import { InlayManager } from "../../manager/inlay";
-    import { UrlManager } from "../../manager/url";
     import { AssetViewer, AssetPopup } from "../components";
     import { Image, Video, Music, Download, Check, X, Trash2 } from "lucide-svelte";
+    import { DataManager } from "../../manager/data";
     
     // Selection mode state
     let selectionMode = false;
@@ -18,7 +18,7 @@
     let showPopup = false;
     let popupKey: string = '';
     
-    let keyMetaMap = new Map<string, { time: Date, type: InlayType }>();
+    let keyMetaMap = new Map<string, Date>();
     let sortedKeys: string[] = [];
     
     // Lazy loading state 
@@ -124,9 +124,12 @@
         
         for (const key of selectedAssets) {
             try {
-                const dataURL = await UrlManager.getDataURL(key);
+                const url = await DataManager.getDataURL(key);
+                if (!url) {
+                    throw new Error('데이터를 찾을 수 없습니다.');
+                }
                 const link = document.createElement('a');
-                link.href = dataURL;
+                link.href = url;
                 link.download = `asset_${key}`;
                 document.body.appendChild(link);
                 link.click();
@@ -145,7 +148,6 @@
     async function deleteSelected() {
         if (selectedAssets.size === 0) return;
         
-        // Confirm deletion
         const confirmed = confirm(`${selectedAssets.size}개의 에셋을 삭제하시겠습니까?`);
         if (!confirmed) return;
         
@@ -154,7 +156,6 @@
                 await InlayManager.deleteInlay(key);
             }
             
-            // Reload metadata
             await loadMetadatas();
             exitSelectionMode();
         } catch (error) {
@@ -165,17 +166,15 @@
 
     async function loadMetadatas() {
         const keys = await InlayManager.getKeys();
-        const newMap = new Map<string, { time: Date, type: InlayType }>();
+        const newMap = new Map<string, Date>();
         
-        for (const key of keys) {
+        await Promise.all(keys.map(async (key) => {
             const time = await TimeManager.getTime(key);
-            const inlayData = await InlayManager.getInlayData(key);
-            const type = inlayData?.type ?? InlayType.Image;
-            newMap.set(key, { time, type });
-        }
-        
+            newMap.set(key, time);
+        }));
+
         const sortedArray = Array.from(newMap.entries())
-            .sort((a, b) => b[1].time.getTime() - a[1].time.getTime());
+            .sort((a, b) => b[1].getTime() - a[1].getTime());
             
         keyMetaMap = newMap;
         sortedKeys = sortedArray.map(([key, _]) => key);
@@ -196,7 +195,7 @@
 <!-- Selection Mode Toolbar -->
 {#if selectionMode}
     <div class="sticky top-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
-        <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center justify-between px-4 py-2">
             <div class="flex items-center gap-3">
                 <button 
                     on:click={exitSelectionMode}
@@ -264,19 +263,11 @@
                 <!-- Asset Viewer with Lazy Loading -->
                 <AssetViewer
                     {key}
-                    type={meta.type}
                     width="w-full"
                     height="h-full"
-                    objectFit={meta.type === InlayType.Audio ? "object-contain" : "object-cover"}
                     showControls={false}
                     isVisible={visibleKeys.has(key)}
                 />
-
-                <!-- Gradient Overlay for better icon visibility -->
-                {#if meta.type !== InlayType.Image && !selectionMode && visibleKeys.has(key)}
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent 
-                                opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                {/if}
 
                 <!-- Selection Checkmark -->
                 {#if selectionMode}
@@ -287,20 +278,6 @@
                             </div>
                         {:else}
                             <div class="w-8 h-8 rounded-full border-2 border-white bg-black/30 backdrop-blur-sm" />
-                        {/if}
-                    </div>
-                {/if}
-
-                <!-- Type Badge -->
-                {#if !selectionMode && visibleKeys.has(key)}
-                    <div class="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/50 backdrop-blur-sm
-                                opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        {#if meta.type === InlayType.Image}
-                            <Image class="w-4 h-4 text-white" />
-                        {:else if meta.type === InlayType.Video}
-                            <Video class="w-4 h-4 text-white" />
-                        {:else if meta.type === InlayType.Audio}
-                            <Music class="w-4 h-4 text-white" />
                         {/if}
                     </div>
                 {/if}
@@ -321,7 +298,6 @@
     <AssetPopup
         currentKey={popupKey}
         allKeys={sortedKeys}
-        {keyMetaMap}
         onClose={closePopup}
     />
 {/if}

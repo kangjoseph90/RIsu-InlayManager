@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@datastructures-js/queue": "^4.3.0",
     "localforage": "^1.10.0",
     "lucide-svelte": "^0.548.0",
     "svelte": "^4.2.0"

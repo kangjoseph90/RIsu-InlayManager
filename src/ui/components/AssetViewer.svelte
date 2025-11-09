@@ -1,12 +1,10 @@
 <script lang="ts">
     import { InlayType } from "../../types";
     import Loading from "./Loading.svelte";
-    import { UrlManager } from "../../manager/url";
-    import { onMount, onDestroy } from "svelte";
-    import { CircleAlert, AudioLines } from "lucide-svelte";
+    import { DataManager } from "../../manager/data";
+    import { Image, Video, Music, CircleAlert, AudioLines } from "lucide-svelte";
     
     export let key: string;
-    export let type: InlayType;
     export let width: string = "w-full";
     export let height: string = "h-full";
     export let objectFit: string = "object-cover";
@@ -17,29 +15,27 @@
     export let isVisible: boolean = true; // For lazy loading
 
     let dataURL: string = '';
+    let type: InlayType = InlayType.Image;
     let loading = true;
     let error: string | null = null;
     let videoElement: HTMLVideoElement;
     let audioElement: HTMLAudioElement;
-    let cachedKey = '';    
+
     
     async function loadAsset() {
         if (!isVisible || !key) {
             return;
         }
         
-        // Use cached URL if available
-        if (cachedKey === key && dataURL) {
-            loading = false;
-            return;
-        }
-        
         try {
             loading = true;
             error = null;
-            const url = await UrlManager.getDataURL(key);
-            dataURL = url;
-            cachedKey = key;
+            const data = await DataManager.getData(key);
+            if (!data) {
+                throw new Error('데이터를 찾을 수 없습니다.');
+            }
+            dataURL = data.url;
+            type = data.type;
         } catch (err) {
             error = err instanceof Error ? err.message : '로드 실패';
             console.error(`Failed to load asset ${key}:`, err);
@@ -48,11 +44,7 @@
         }
     }
     
-    // Watch for isVisible changes and key changes
     $: if (isVisible && key) {
-        if (cachedKey !== key) {
-            dataURL = ''; // Clear old data when key changes
-        }
         loadAsset();
     }
     
@@ -134,5 +126,17 @@
                 <span class="text-sm">로드 대기 중...</span>
             </div>
         {/if}
+
+        <!-- Type Badge -->
+        <div class="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/50 backdrop-blur-sm
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {#if type === InlayType.Image}
+                <Image class="w-4 h-4 text-white" />
+            {:else if type === InlayType.Video}
+                <Video class="w-4 h-4 text-white" />
+            {:else if type === InlayType.Audio}
+                <Music class="w-4 h-4 text-white" />
+            {/if}
+        </div>
     {/if}
 </div>

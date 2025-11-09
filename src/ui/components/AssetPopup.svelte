@@ -1,18 +1,17 @@
 <script lang="ts">
     import { InlayType } from "../../types";
-    import { UrlManager } from "../../manager/url";
+    import { DataManager } from "../../manager/data";
     import { ChevronLeft, ChevronRight, CircleAlert, X } from "lucide-svelte";
     import { onMount, onDestroy } from "svelte";
     import Loading from "./Loading.svelte";
     
     export let currentKey: string;
     export let allKeys: string[];
-    export let keyMetaMap: Map<string, { time: Date, type: InlayType }>;
     export let onClose: () => void;
     
     let currentIndex = 0;
-    let currentMeta: { time: Date, type: InlayType } | undefined;
     let dataURL: string = '';
+    let type: InlayType = InlayType.Image;
     let loading = true;
     let error: string | null = null;
     
@@ -27,8 +26,12 @@
             loading = true;
             error = null;
             dataURL = '';
-            const url = await UrlManager.getDataURL(currentKey);
-            dataURL = url;
+            const data = await DataManager.getData(currentKey);
+            if (!data) {
+                throw new Error('데이터를 찾을 수 없습니다.');
+            }
+            dataURL = data.url;
+            type = data.type;
         } catch (err) {
             error = err instanceof Error ? err.message : '로드 실패';
             console.error(`Failed to load asset ${currentKey}:`, err);
@@ -43,10 +46,8 @@
     }
     
     // Initialize current index and meta
-    $: {
-        currentIndex = allKeys.indexOf(currentKey);
-        currentMeta = keyMetaMap.get(currentKey);
-    }
+    $: currentIndex = allKeys.indexOf(currentKey);
+    
     
     // Navigate to previous asset
     function navigatePrev() {
@@ -139,50 +140,48 @@
     </button>
     
     <div class="max-w-6xl w-full max-h-[90vh] flex items-center justify-center p-4 sm:p-8 pointer-events-none">
-        {#if currentMeta}
-            <div 
-                class="flex items-center justify-center pointer-events-auto max-w-full max-h-full cursor-default" 
-                on:click|stopPropagation
-            >
-                {#if loading}
-                    <Loading size="large" />
-                {:else if error}
-                    <div class="w-full h-full flex flex-col items-center justify-center text-red-400 gap-2">
-                        <CircleAlert size={48} />
-                        <span class="text-sm">{error}</span>
-                    </div>
-                {:else if dataURL}
-                    {#if currentMeta.type === InlayType.Audio}
-                        <div class="w-96 bg-zinc-900 rounded-2xl shadow-2xl">
-                            <audio
-                                src={dataURL}
-                                controls
-                                autoplay
-                                class="w-full"
-                            >
-                                브라우저가 오디오를 지원하지 않습니다.
-                            </audio>
-                        </div>
-                    {:else if currentMeta.type === InlayType.Video}
-                        <!-- svelte-ignore a11y-media-has-caption -->
-                        <video
+        <div 
+            class="flex items-center justify-center pointer-events-auto max-w-full max-h-full cursor-default" 
+            on:click|stopPropagation
+        >
+            {#if loading}
+                <Loading size="large" />
+            {:else if error}
+                <div class="w-full h-full flex flex-col items-center justify-center text-red-400 gap-2">
+                    <CircleAlert size={48} />
+                    <span class="text-sm">{error}</span>
+                </div>
+            {:else if dataURL}
+                {#if type === InlayType.Audio}
+                    <div class="w-96 bg-zinc-900 rounded-2xl shadow-2xl">
+                        <audio
                             src={dataURL}
                             controls
                             autoplay
-                            class="max-w-full max-h-[85vh]"
+                            class="w-full"
                         >
-                            브라우저가 동영상을 지원하지 않습니다.
-                        </video>
-                    {:else if currentMeta.type === InlayType.Image}
-                        <img
-                            src={dataURL}
-                            alt="Asset"
-                            class="max-w-full max-h-[85vh] object-contain"
-                        />
-                    {/if}
+                            브라우저가 오디오를 지원하지 않습니다.
+                        </audio>
+                    </div>
+                {:else if type === InlayType.Video}
+                    <!-- svelte-ignore a11y-media-has-caption -->
+                    <video
+                        src={dataURL}
+                        controls
+                        autoplay
+                        class="max-w-full max-h-[85vh]"
+                    >
+                        브라우저가 동영상을 지원하지 않습니다.
+                    </video>
+                {:else if type === InlayType.Image}
+                    <img
+                        src={dataURL}
+                        alt="Asset"
+                        class="max-w-full max-h-[85vh] object-contain"
+                    />
                 {/if}
-            </div>
-        {/if}
+            {/if}
+        </div>
     </div>
     
     <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-4 z-10">

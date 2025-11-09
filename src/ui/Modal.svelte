@@ -3,12 +3,12 @@
     import { AssetTab } from "./tabs";
     import { X } from "lucide-svelte";
     import { onDestroy } from "svelte";
-    import { UrlManager } from "../manager/url";
+    import { DataManager } from "../manager/data";
 
     export let onClose: () => void;
 
     onDestroy(() => {
-        UrlManager.revokeAll()
+        DataManager.revokeAll()
     });
 </script>
 
